@@ -87,3 +87,15 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# PyCharm project settings
+.idea
+
+# Mac unnecessary files
+.DS_Store
+
+# Django files
+static/
+
+# Flake8 configuration file
+tox.ini

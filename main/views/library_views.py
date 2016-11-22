@@ -1,5 +1,6 @@
 import csv
 import itertools
+from django.db import transaction
 from django.http import JsonResponse
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -20,44 +21,39 @@ class LibraryView(View):
         }, status=405)
 
     def _clear_database(self):
-        Book.objects.raw('TRUNCATE TABLE ')
-        Author.objects.all().delete()
+        with transaction.atomic():
+            Book.objects.all().delete()
+            Author.objects.all().delete()
 
     def _grouper(self, iterable, n, fillvalue=None):
         args = [iter(iterable)] * n
         return itertools.izip_longest(fillvalue=fillvalue, *args)
 
-    def _insert_author_from_tuple(self, author):
-        return Author.objects.create(
-            name=author[0],
-            surname=author[1],
-            birth_date=author[2]
-        )
+    def _import_csv_to_db(self, csv_file):
+        with csv_file:
+            rows = csv.reader(csv_file)
+            book_count = 0
+            for row in rows:
+                book = row[:2]
+                new_book, created = Book.objects.get_or_create(
+                    title=book[0],
+                    lc_classification=book[1],
+                )
+                if created:  # If created is true, book is created now.
+                    book_count += 1
+                    authors = list(self._grouper(row[2:], 3))
+                    authors = Author.objects.create_authors(authors)
+                    new_book.authors.add(*authors)
+
+        return '{} books are inserted!'.format(book_count)
 
     def post(self, request, *args, **kwargs):
         self._clear_database()
-        rows = csv.reader(request.FILES.get('library'))
-        book_count, author_count = (0, 0)
-        for row in rows:
-            book = row[:2]
-            book_obj = Book.objects.create(
-                title=book[0],
-                lc_classification=book[1]
-            )
-            if book_obj is not None:
-                book_count += 1
-                authors = list(self._grouper(row[2:], 3))
-                author_count = 0
-                for author in authors:
-                    if book_obj.authors.add(
-                            self._insert_author_from_tuple(author)):
-                        author_count += 1
-
-        msg = '{} books and {} authors are inserted!'.format(
-            book_count,
-            author_count
-        )
+        f = request.FILES.get('library')
+        msg = self._import_csv_to_db(f)
         return JsonResponse({'status': 'succeeded', 'message': msg})
 
-    def patch(self, request):
-        return JsonResponse({'status': 'succeeded, patch'})
+    def patch(self, request, *args, **kwargs):
+        f = request.FILES.get('library')
+        msg = self._import_csv_to_db(f)
+        return JsonResponse({'status': 'succeeded', 'message': msg})

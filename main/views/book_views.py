@@ -19,12 +19,13 @@ class BookView(View):
         }, status=405)
 
     def get(self, request, id=None):
-        resp = {'status': 200, 'result': None}
+        resp = {'status': 404, 'result': None}
         if id:
             if Book.objects.filter(pk=id).exists():
                 resp['result'] = Book.objects.filter(pk=id).values()[0]
+                resp['status'] = 200
 
-            return JsonResponse(resp, status=200)
+            return JsonResponse(resp, status=resp['status'])
 
         if request.GET:
             query_params = {}
@@ -35,6 +36,7 @@ class BookView(View):
             books = Book.objects.all().values()
 
         if books:
+            resp['status'] = 200
             resp['result'] = list(books)
 
-        return JsonResponse(resp, status=200)
+        return JsonResponse(resp, status=resp['status'])

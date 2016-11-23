@@ -2,12 +2,12 @@ from django.http import HttpResponse, JsonResponse
 from django.views.generic import View
 from django.views.decorators.csrf import csrf_exempt
 
-from main.models import Book
+from main.models import Author, Book
 
 
 class BookView(View):
     http_method_names = ['get', 'post', 'put', 'patch']
-    
+
     @csrf_exempt
     def dispatch(self, request, *args, **kwargs):
         return super(BookView, self).dispatch(request, *args, **kwargs)
@@ -22,21 +22,22 @@ class BookView(View):
         resp = {'status': 404, 'result': None}
         if id:
             if Book.objects.filter(pk=id).exists():
-                resp['result'] = Book.objects.filter(pk=id).values()[0]
+                resp['result'] = Book.objects.get_from_id_with_authors(id)
                 resp['status'] = 200
 
             return JsonResponse(resp, status=resp['status'])
 
+        query_params = None
         if request.GET:
             query_params = {}
             for key, value in request.GET.items():
-                query_params['{0}__{1}'.format(key, 'contains')] = value
-            books = Book.objects.filter(**query_params).values()
-        else:
-            books = Book.objects.all().values()
+                if key == 'authors':
+                    key += '__name'
+                query_params['{0}__{1}'.format(key, 'icontains')] = value
 
-        if books:
+        result = Book.objects.get_with_authors(query_params)
+        if result:
             resp['status'] = 200
-            resp['result'] = list(books)
+            resp['result'] = result
 
         return JsonResponse(resp, status=resp['status'])

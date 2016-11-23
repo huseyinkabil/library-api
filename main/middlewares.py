@@ -1,12 +1,14 @@
 from django.http.multipartparser import MultiPartParser
 
 
-class HttpPatchMiddleware(object):
+class HttpPatchAndPutMiddleware(object):
+    METHODS = ('PATCH', 'PUT')
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.method == 'PATCH':
+        if request.method in self.METHODS:
             parser = MultiPartParser(
                 request.META,
                 request._stream,

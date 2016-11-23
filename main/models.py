@@ -32,4 +32,4 @@ class Book(models.Model):
     authors = models.ManyToManyField(Author)
 
     def __unicode__(self):
-        return self.name
+        return self.title

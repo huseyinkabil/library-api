@@ -75,3 +75,13 @@ class BookView(View):
         resp['result'] = Book.objects.get_from_id_with_authors(new_book.id)
 
         return JsonResponse(resp, status=resp['status'])
+
+    def patch(self, request, id=None):
+        resp = {}
+        if not id:
+            resp['status'] = 400
+            resp['result'] = 'Id paramater is required!'
+            return JsonResponse(resp, status=resp['status'])
+
+        print request.POST
+        return JsonResponse({'hebe': 'hobe'}, status=500)

@@ -1,4 +1,6 @@
 from django.http.multipartparser import MultiPartParser
+from django.http.multipartparser import MultiPartParserError
+from django.http import JsonResponse
 
 
 class HttpPatchAndPutMiddleware(object):
@@ -9,13 +11,19 @@ class HttpPatchAndPutMiddleware(object):
 
     def __call__(self, request):
         if request.method in self.METHODS:
-            parser = MultiPartParser(
-                request.META,
-                request._stream,
-                request.upload_handlers,
-                request.encoding
-            )
-            request._post, request._files = parser.parse()
+            try:
+                parser = MultiPartParser(
+                    request.META,
+                    request._stream,
+                    request.upload_handlers,
+                    request.encoding
+                )
+                request._post, request._files = parser.parse()
+            except MultiPartParserError as e:
+                return JsonResponse({
+                    'status': 400,
+                    'result': str(e)
+                }, status=400)
 
         response = self.get_response(request)
 

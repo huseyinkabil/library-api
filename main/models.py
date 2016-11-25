@@ -62,7 +62,7 @@ class BookManager(models.Manager):
 class Book(models.Model):
     objects = BookManager()
     title = models.CharField(max_length=255)
-    lc_classification = models.CharField(max_length=255, unique=True)
+    lc_classification = models.CharField(max_length=255)
     authors = models.ManyToManyField(Author)
 
     def __unicode__(self):

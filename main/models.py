@@ -20,7 +20,7 @@ class Author(models.Model):
     objects = AuthorManager()
     name = models.CharField(max_length=30)
     surname = models.CharField(max_length=30)
-    birth_date = models.DateField()
+    birth_date = models.DateField(null=True, blank=True)
 
     def __unicode__(self):
         return '{} {}, {}'.format(self.name, self.surname, self.birth_date)

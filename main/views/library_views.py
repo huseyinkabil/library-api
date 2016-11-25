@@ -16,8 +16,9 @@ class LibraryView(View):
 
     def http_method_not_allowed(self, request):
         return JsonResponse({
-            'error_message': 'Method not allowed!',
-            'allowed_methods': self._allowed_methods(),
+            'status': 405,
+            'result': 'Invalid method!',
+            'allowed_methods': ','.join(self.http_method_names)
         }, status=405)
 
     def _clear_database(self):

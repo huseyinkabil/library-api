@@ -1,6 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
-from django.views.generic import View
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from main.models import Author, Book
@@ -28,11 +28,12 @@ class BookView(View):
     def http_method_not_allowed(self, request, *args, **kwargs):
         return JsonResponse({
             'status': 405,
-            'result': 'Invalid method!'
+            'result': 'Invalid method!',
+            'allowed_methods': ','.join(self.http_method_names)
         }, status=405)
 
     def _validate(self, post_keys):
-        required_keys = set(['title', 'lc_classification', 'authors'])
+        required_keys = {'title', 'lc_classification', 'authors'}
         return required_keys.issubset(set(post_keys))
 
     def _get_authors_or_fail(self, author_ids_str):

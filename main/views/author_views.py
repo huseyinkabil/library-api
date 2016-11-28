@@ -35,9 +35,8 @@ class AuthorView(View):
                 resp = {'status': 200, 'result': author.to_dict()}
             return JsonResponse(resp, status=resp['status'])
 
-        query_params = None
+        query_params = {}
         if request.GET:
-            query_params = {}
             for key, value in request.GET.items():
                 query_params['{0}__{1}'.format(key, 'icontains')] = value
 
